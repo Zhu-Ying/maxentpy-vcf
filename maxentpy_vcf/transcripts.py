@@ -5,8 +5,7 @@ import pandas as pd
 TRANSCRIPT = namedtuple('TRANSCRIPT', ['name', 'chrom', 'tx_start', 'tx_end', 'strand', 'exons', 'introns'])
 
 def read_refgene(infile: str) -> pd.DataFrame:
-    dataframe = pd.read_csv(refgene_file, header=None, delimiter="\t")
-    dataframe = pd.read_csv(refgene_file, header=None, delimiter="\t")
+    dataframe = pd.read_csv(infile, header=None, delimiter="\t")
     dataframe.columns = [
         'Bin', 'Name', 'Chrom', 'Strand', 'TxStart', 'TxEnd', 'CdsStart', 'CdsEnd',
         'ExonCount', 'ExonStarts', 'ExonEnds', 'Score', 'Gene', 'CdsStartStat', 'CdsEndStat', 'ExonFrames'
@@ -38,16 +37,16 @@ def make_transcript(refgene) -> TRANSCRIPT:
     14. string cdsEndStat;          "enum('none','unk','incmpl','cmpl')"
     15. lstring exonFrames;         "Exon frame offsets {0,1,2}"
     """
-    exon_starts = map(int, refgene.ExonStarts.strip(',').split(','))
-    exon_ends = map(int, refgene.ExonEnds.strip(',').split(','))
+    exon_starts = map(int, str(refgene.ExonStarts).strip(',').split(','))
+    exon_ends = map(int, str(refgene.ExonEnds).strip(',').split(','))
     exons = list(zip(exon_starts, exon_ends))
     introns = [(exons[i][1], exons[i+1][0]) for i in range(int(refgene.ExonCount) - 1)]
     return TRANSCRIPT(
-        name=refgene.Name,
-        chrom=refgene.Chrom,
+        name=str(refgene.Name),
+        chrom=str(refgene.Chrom),
         tx_start=int(refgene.TxStart),
         tx_end=int(refgene.TxEnd),
-        strand=refgene.Strand,
+        strand=str(refgene.Strand),
         exons=exons,
         introns = introns,
     )

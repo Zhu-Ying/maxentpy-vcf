@@ -39,21 +39,22 @@ def vcf_to_av(chrom: str, pos, ref: str, alt: str) -> [str, int, int, str, str]:
             alt = re.sub(r'^%s' % substr, '', alt)
             start += len(substr) - 1 if len(substr) and not ref else len(substr)
     end = start + len(ref) - 1 if ref else start
-    return format_chrom(chrom), start, end, ref if ref else '-', alt if alt else '-'
+    return re.sub(r'[Cc][Hh][Cc]', '', chrom), start, end, ref if ref else '-', alt if alt else '-'
 
-def run_maxentpy(vcf_file: str, genome_file: str, refgene_file: str, gene_detail_columns: list[str], outfile: str):
+def run_maxentpy(vcf_file: str, genome_file: str, refgene_file: str, outfile: str):
+    genome = Fasta(genome_file)
     refgenes = read_refgene(refgene_file)
     vcf_reader = pyvcf.Reader(filename=vcf_file)
     rows = list()
     for record in vcf_reader:
-        for alt in alts:
-            chrom, start, end, ref, alt2 = vcf_to_av(re.sub(r'[Cc][Hh][Cc]', '', record.CHROM), record.POS, record.REF, alt)
+        for alt in record.ALT:
+            chrom, start, end, ref, alt2 = vcf_to_av(record.CHROM, int(record.POS), str(record.REF), str(alt))
             result = None
             transcript_names = set()
             chrom2 = 'chrM' if chrom == 'MT' else f'chr{chrom}'
-            for refgene in refgenes.query(f'Chrom == {chrom2} and TxStart <= {end} and TxEnd >= {start}'):
+            for refgene in refgenes.query(f'Chrom == "{chrom2}" and TxStart <= {end} and TxEnd >= {start}').iloc:
                 transcript = make_transcript(refgene)
-                splicing = SplicingMaxEnt(chrom2, record.POS, record.REF, alt, transcript, genome)
+                splicing = SplicingMaxEnt(chrom2, str(record.POS), str(record.REF), str(alt), transcript, genome)
                 if result:
                     if abs(splicing.maxentscore_var) > abs(result.maxentscore_var):
                         result = splicing
@@ -64,7 +65,7 @@ def run_maxentpy(vcf_file: str, genome_file: str, refgene_file: str, gene_detail
                     result = splicing
             if result:
                 rows.append({
-                    'Chr': record.CHROM, 'Start': start, 'End': end, 'Ref': ref, 'Alt': alt2,
+                    'Chr': chrom, 'Start': start, 'End': end, 'Ref': ref, 'Alt': alt2,
                     'Maxent_type': result.splice_type,
                     'Maxent_pred': result.maxentpred,
                     'Maxent_score_ref': result.maxentscore_ref,
@@ -72,6 +73,7 @@ def run_maxentpy(vcf_file: str, genome_file: str, refgene_file: str, gene_detail
                     'Maxent_score_var': result.maxentscore_var,
                     'Maxent_foldchange': result.maxentscore_foldchange
                 })
+                print(chrom, start, end, ref, alt, result.splice_type, result.maxentpred)
                 
     with open(outfile, 'w') as fo:
         writer = csv.DictWriter(fo, fieldnames=[
