@@ -1,8 +1,8 @@
-import re
 from collections import namedtuple
 import pandas as pd
 
 TRANSCRIPT = namedtuple('TRANSCRIPT', ['name', 'chrom', 'tx_start', 'tx_end', 'strand', 'exons', 'introns'])
+
 
 def read_refgene(infile: str) -> pd.DataFrame:
     dataframe = pd.read_csv(infile, header=None, delimiter="\t")
@@ -11,6 +11,7 @@ def read_refgene(infile: str) -> pd.DataFrame:
         'ExonCount', 'ExonStarts', 'ExonEnds', 'Score', 'Gene', 'CdsStartStat', 'CdsEndStat', 'ExonFrames'
     ]
     return dataframe
+
 
 def make_transcript(refgene) -> TRANSCRIPT:
     """
@@ -48,5 +49,5 @@ def make_transcript(refgene) -> TRANSCRIPT:
         tx_end=int(refgene.TxEnd),
         strand=str(refgene.Strand),
         exons=exons,
-        introns = introns,
+        introns=introns,
     )

@@ -1,8 +1,8 @@
 from pyfaidx import Fasta
-from enum import Enum
 from .transcripts import TRANSCRIPT
 from .maxentpy import maxent
 from .maxentpy.maxent import load_matrix5, load_matrix3
+
 
 class SplicingMaxEnt:
     MATRIX5 = load_matrix5()
