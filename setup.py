@@ -18,10 +18,10 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'pyfaidx', 'pandas'
+        'pyfaidx', 'pandas', 'PyVCF'
     ],
     package_data={
         "maxentpy_vcf": ['maxentpy/data/*'],
     },
-    scripts=['maxentpy-annovar.py']
+    scripts=['maxentpy-vcf.py']
 )
